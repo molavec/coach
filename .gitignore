@@ -1,0 +1,18 @@
+# ==============================================================================
+# Coach — .gitignore
+# ==============================================================================
+# Excluye datos personales del usuario. Solo se commitean los skills,
+# la estructura del proyecto y el AGENTS.md (genéricos y reutilizables).
+# ==============================================================================
+
+# ─── Configuración personal del usuario ───
+profile/
+
+# ─── Datos financieros ───
+finances/
+
+# ─── Proyectos, tareas y archivados ───
+projects/
+
+# ─── Crecimiento vocacional (checklists, reflexiones, áreas de enfoque) ───
+growth/

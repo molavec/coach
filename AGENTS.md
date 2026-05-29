@@ -1,40 +1,40 @@
-# Coach Financiero, Vocacional & Estratega de Productividad
+# Financial, Vocational Coach & Productivity Strategist
 
-Este proyecto implementa un coach de productividad, finanzas y desarrollo vocacional diseñado para perfiles técnicos y creativos senior. El coach ayuda a mantener el foco radical, optimizar la gestión del tiempo, evitar la procrastinación estructurada y priorizar actividades generadoras de ingresos sin descuidar el bienestar físico y mental.
+This project implements a productivity, financial, and vocational development coach designed for senior technical and creative profiles. The coach helps maintain radical focus, optimize time management, avoid structured procrastination, and prioritize income-generating activities without neglecting physical and mental well-being.
 
-## Estructura del Proyecto
+## Project Structure
 
 ```
 coach/
-├── profile/               # Configuración personal del usuario
-│   ├── user.yaml           # Perfil (nombre, habilidades, pilar de estabilidad)
-│   ├── design-system.yaml  # Sistema de diseño preferido
-│   └── coaching-rules.yaml # Reglas de coaching (tono, bloques, contingencias)
+├── profile/               # Personal user configuration
+│   ├── user.yaml           # Profile (name, skills, stability pillar)
+│   ├── design-system.yaml  # Preferred design system
+│   └── coaching-rules.yaml # Coaching rules (tone, blocks, contingencies)
 │
-├── projects/              # Gestión de proyectos y tareas
-│   ├── projects.yaml       # Proyectos activos
-│   ├── tasks.yaml          # Tareas activas
-│   └── archived/           # Histórico de proyectos y tareas
+├── projects/              # Project and task management
+│   ├── projects.yaml       # Active projects
+│   ├── tasks.yaml          # Active tasks
+│   └── archived/           # Project and task history
 │
-├── finances/              # Planificación financiera
-│   ├── goals.yaml          # Metas financieras y estrategia de cobro
-│   ├── projections.yaml    # Proyecciones de ingresos
-│   └── pricing.yaml        # Catálogo de precios de servicios
+├── finances/              # Financial planning
+│   ├── goals.yaml          # Financial goals and billing strategy
+│   ├── projections.yaml    # Income projections
+│   └── pricing.yaml        # Service pricing catalog
 │
-└── growth/                # Crecimiento vocacional y personal
-    ├── focus-areas.yaml    # Áreas de enfoque actual
-    ├── checklists/         # Checklists de trabajo
-    └── reflections/        # Reflexiones y journaling vocacional
+└── growth/                # Vocational and personal growth
+    ├── focus-areas.yaml    # Current focus areas
+    ├── checklists/         # Work checklists
+    └── reflections/        # Vocational reflections and journaling
 ```
 
-## Reglas de Gestión del Proyecto
+## Project Management Rules
 
-* **Proyectos Activos:** Gestiona el listado en `./projects/projects.yaml`.
-* **Tareas Activas:** Gestiona el listado en `./projects/tasks.yaml`.
-* **Proyectos Archivados:** Archiva en `./projects/archived/projects.yaml`.
-* **Tareas Archivadas:** Archiva por fecha en `./projects/archived/yyyy/mm/dd-tasks.yaml`.
-* **Metas Financieras:** Gestiona en `./finances/goals.yaml`.
-* **Proyecciones:** Actualiza en `./finances/projections.yaml`.
-* **Pricing:** Mantiene el catálogo en `./finances/pricing.yaml`.
-* **Áreas de Enfoque:** Actualiza en `./growth/focus-areas.yaml`.
-* **Checklists:** Crea y gestiona en `./growth/checklists/`.
+* **Active Projects:** Manage the list in `./projects/projects.yaml`.
+* **Active Tasks:** Manage the list in `./projects/tasks.yaml`.
+* **Archived Projects:** Archive in `./projects/archived/projects.yaml`.
+* **Archived Tasks:** Archive by date in `./projects/archived/yyyy/mm/dd-tasks.yaml`.
+* **Financial Goals:** Manage in `./finances/goals.yaml`.
+* **Projections:** Update in `./finances/projections.yaml`.
+* **Pricing:** Maintain the catalog in `./finances/pricing.yaml`.
+* **Focus Areas:** Update in `./growth/focus-areas.yaml`.
+* **Checklists:** Create and manage in `./growth/checklists/`.

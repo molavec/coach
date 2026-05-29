@@ -1,164 +1,164 @@
 ---
 name: coach-review
-description: 'Resúmenes semanales y retrospectiva. Genera una visión general al inicio de semana (planificación), un checkpoint a mitad de semana (ajuste de rumbo) y una retrospectiva al cierre (aprendizajes y replanificación). Se activa cuando el usuario pida un resumen semanal, planificación de semana, retrospectiva, o el coach detecte que es lunes/miércoles/viernes.'
+description: 'Weekly summaries and retrospectives. Generates a weekly kickoff (planning), a midweek checkpoint (course correction), and a wrap-up retrospective (learnings and replanning). Activates when the user asks for a weekly summary, weekly planning, retrospective, or the coach detects it is Monday/Wednesday/Friday.'
 ---
 
-## Propósito
+## Purpose
 
-Darle al usuario una visión panorámica y accionable de su semana en 3 momentos clave, con recomendaciones enfocadas en maximizar resultados y ajustar rumbo rápidamente.
-
----
-
-## Fuentes de Datos
-
-Antes de generar cualquier reporte, el agente debe leer:
-
-1. **`projects/tasks.yaml`** — Tareas activas, estados y tiempos estimados
-2. **`projects/projects.yaml`** — Proyectos activos y prioridades
-3. **`finances/goals.yaml`** — Meta financiera mensual
-4. **`finances/projections.yaml`** — Proyecciones del mes en curso
-5. **`growth/focus-areas.yaml`** — Áreas de enfoque activas
-6. **`profile/user.yaml`** — Contexto del usuario
-7. **`profile/coaching-rules.yaml`** *(si existe)* — Reglas y bloques horarios
+To give the user a panoramic and actionable view of their week at 3 key moments, with recommendations focused on maximizing results and adjusting course quickly.
 
 ---
 
-## Los 3 Momentos de la Semana
+## Data Sources
 
-### 🟢 1. Inicio de Semana — "Arranque" (Lunes o primera sesión de la semana)
+Before generating any report, the agent must read:
 
-**Objetivo:** Claridad total sobre qué atacar esta semana.
-
-**Estructura del reporte:**
-
-```
-📅 ARRANQUE DE SEMANA — [fecha inicio] al [fecha fin]
-
-🎯 FOCO DE LA SEMANA
-   Top 3 prioridades ordenadas por impacto en la meta financiera.
-
-💰 PANORAMA FINANCIERO
-   - Meta mensual: $X
-   - Facturado este mes: $Y
-   - Brecha: $Z
-   - Días restantes del mes: N
-
-📋 TAREAS CRÍTICAS (máx. 5)
-   Las tareas que mueven la aguja esta semana, con tiempo estimado total.
-
-⚠️ ALERTAS
-   - Proyectos en riesgo o con entregables próximos
-   - Clientes que requieren seguimiento
-
-💡 RECOMENDACIÓN DEL COACH
-   Una recomendación estratégica concreta basada en la situación actual.
-```
-
-**Reglas:**
-- Si la brecha financiera es > 50% de la meta y quedan < 15 días del mes → activar modo urgencia: reordenar prioridades poniendo prospección comercial primero.
-- Si hay tareas completadas de la semana anterior, reconocerlas brevemente ("La semana pasada cerraste X — buen momentum").
-- Cerrar con: **"¿Ajustamos algo o arrancamos con esto?"**
+1. **`projects/tasks.yaml`** — Active tasks, statuses, and estimated times.
+2. **`projects/projects.yaml`** — Active projects and priorities.
+3. **`finances/goals.yaml`** — Monthly financial goal.
+4. **`finances/projections.yaml`** — Projections for the current month.
+5. **`growth/focus-areas.yaml`** — Active focus areas.
+6. **`profile/user.yaml`** — User context.
+7. **`profile/coaching-rules.yaml`** *(if exists)* — Rules and time blocks.
 
 ---
 
-### 🟡 2. Mitad de Semana — "Checkpoint" (Miércoles o tercera sesión)
+## The 3 Key Moments of the Week
 
-**Objetivo:** Ajuste de rumbo antes de que sea tarde.
+### 🟢 1. Weekly Kickoff — "Startup" (Monday or first session of the week)
 
-**Estructura del reporte:**
+**Goal:** Total clarity on what to attack this week.
+
+**Report Structure:**
 
 ```
-🔄 CHECKPOINT MITAD DE SEMANA — [fecha]
+📅 WEEKLY STARTUP — [start date] to [end date]
 
-✅ AVANCE
-   Tareas completadas desde el arranque (con ✅).
-   Tareas en progreso (con 🔄).
+🎯 WEEKLY FOCUS
+   Top 3 priorities ordered by financial goal impact.
 
-❌ BLOQUEADO O SIN AVANCE
-   Tareas sin movimiento y posible causa.
+💰 FINANCIAL OVERVIEW
+   - Monthly Goal: $X
+   - Billed this month: $Y
+   - Gap: $Z
+   - Days remaining in the month: N
 
-📊 VELOCIDAD
-   - Tareas planificadas: N
-   - Completadas: M
-   - Ritmo: [en track / retrasado / adelantado]
+📋 CRITICAL TASKS (max 5)
+   The tasks that move the needle this week, with total estimated time.
 
-🔀 AJUSTES SUGERIDOS
-   Si está retrasado:
-   - Qué eliminar o posponer
-   - Qué reasignar o simplificar
-   Si está adelantado:
-   - Qué tarea de alto impacto agregar
+⚠️ ALERTS
+   - Projects at risk or with upcoming deliverables.
+   - Clients requiring follow-up.
 
-💡 RECOMENDACIÓN DEL COACH
-   Intervención táctica para el resto de la semana.
+💡 COACH RECOMMENDATION
+   A concrete strategic recommendation based on the current situation.
 ```
 
-**Reglas:**
-- Si completó < 30% de las tareas planificadas → sugerir reducir scope y proteger las 2 tareas de mayor impacto financiero.
-- Si completó > 70% → felicitar y sugerir adelantar tareas de la siguiente semana o invertir en prospección.
-- Cerrar con: **"¿Qué necesitas ajustar para cerrar fuerte la semana?"**
+**Rules:**
+- If the financial gap is > 50% of the goal and there are < 15 days left in the month → activate urgency mode: reorder priorities putting commercial prospecting first.
+- If there are completed tasks from the previous week, acknowledge them briefly ("Last week you closed X — good momentum").
+- Close with: **"Should we adjust anything or do we kick off with this?"**
 
 ---
 
-### 🔴 3. Fin de Semana — "Retrospectiva" (Viernes o última sesión)
+### 🟡 2. Midweek — "Checkpoint" (Wednesday or third session)
 
-**Objetivo:** Aprender, celebrar y replanificar.
+**Goal:** Course correction before it is too late.
 
-**Estructura del reporte:**
+**Report Structure:**
 
 ```
-📊 RETROSPECTIVA SEMANAL — [fecha inicio] al [fecha fin]
+🔄 MIDWEEK CHECKPOINT — [date]
 
-🏆 LOGROS DE LA SEMANA
-   Tareas completadas y resultados tangibles.
+✅ PROGRESS
+   Completed tasks since startup (with ✅).
+   Tasks in progress (with 🔄).
 
-📈 MÉTRICAS
-   - Tareas completadas: M de N planificadas (X%)
-   - Horas estimadas ejecutadas: ~Y hrs
-   - Avance financiero: $facturado / $meta
+❌ BLOCKED OR NO PROGRESS
+   Tasks without movement and possible cause.
 
-🔍 QUÉ FUNCIONÓ
-   Patrones positivos detectados (bloques productivos, clientes cerrados, etc.)
+📊 VELOCITY
+   - Planned tasks: N
+   - Completed: M
+   - Pace: [on track / delayed / ahead of schedule]
 
-🚧 QUÉ NO FUNCIONÓ
-   Bloqueos, dispersión, tareas postergadas repetidamente.
+🔀 SUGGESTED ADJUSTMENTS
+   If delayed:
+   - What to eliminate or postpone.
+   - What to reassign or simplify.
+   If ahead:
+   - What high-impact task to add.
 
-🧠 APRENDIZAJE CLAVE
-   Una lección concreta de la semana para incorporar.
-
-🎯 SEMILLA PARA LA PRÓXIMA SEMANA
-   Top 3 prioridades sugeridas basadas en lo aprendido y la brecha financiera.
-
-💡 RECOMENDACIÓN DEL COACH
-   Recomendación estratégica para la siguiente semana.
+💡 COACH RECOMMENDATION
+   Tactical intervention for the rest of the week.
 ```
 
-**Reglas:**
-- Si la brecha financiera mensual es crítica → la recomendación debe ser de prospección o cierre de ventas, no de desarrollo interno.
-- Si el usuario completó > 80% → celebrar genuinamente y subir el nivel de ambición para la siguiente semana.
-- Si el usuario completó < 40% → no juzgar, identificar la causa raíz (¿scope excesivo? ¿bloqueos externos? ¿falta de energía?) y proponer ajustes.
-- Guardar la retrospectiva en `growth/reflections/[fecha]-retrospectiva.md` para registro histórico.
-- Cerrar con: **"¿Algo que quieras agregar antes de planificar la próxima semana?"**
+**Rules:**
+- If completed < 30% of planned tasks → suggest reducing scope and protecting the 2 tasks with the highest financial impact.
+- If completed > 70% → congratulate the user and suggest advancing tasks from the next week or investing in prospecting.
+- Close with: **"What do you need to adjust to finish the week strong?"**
 
 ---
 
-## Detección Automática del Momento
+### 🔴 3. Weekend — "Retrospective" (Friday or last session)
 
-Si el usuario no especifica qué tipo de reporte quiere, el coach debe inferirlo:
+**Goal:** Learn, celebrate, and replan.
 
-| Día de la semana | Momento sugerido |
+**Report Structure:**
+
+```
+📊 WEEKLY RETROSPECTIVE — [start date] to [end date]
+
+🏆 ACHIEVEMENTS OF THE WEEK
+   Completed tasks and tangible results.
+
+📈 METRICS
+   - Completed tasks: M out of N planned (X%)
+   - Estimated hours executed: ~Y hrs
+   - Financial progress: $billed / $goal
+
+🔍 WHAT WORKED
+   Positive patterns detected (productive blocks, closed clients, etc.)
+
+🚧 WHAT DID NOT WORK
+   Bottlenecks, distraction, repeatedly postponed tasks.
+
+🧠 KEY LEARNING
+   A concrete lesson from the week to incorporate.
+
+🎯 SEED FOR NEXT WEEK
+   Top 3 suggested priorities based on learnings and financial gap.
+
+💡 COACH RECOMMENDATION
+   Strategic recommendation for next week.
+```
+
+**Rules:**
+- If the monthly financial gap is critical → the recommendation must be prospecting or sales closure, not internal development.
+- If the user completed > 80% → celebrate genuinely and raise the level of ambition for the next week.
+- If the user completed < 40% → do not judge, identify the root cause (excessive scope? external blockers? lack of energy?) and propose adjustments.
+- Save the retrospective in `growth/reflections/[date]-retrospectiva.md` for historical records.
+- Close with: **"Anything you want to add before planning next week?"**
+
+---
+
+## Automatic Moment Detection
+
+If the user does not specify what type of report they want, the coach must infer it:
+
+| Day of the Week | Suggested Moment |
 |---|---|
-| Lunes o Martes | 🟢 Arranque |
-| Miércoles o Jueves | 🟡 Checkpoint |
-| Viernes, Sábado o Domingo | 🔴 Retrospectiva |
+| Monday or Tuesday | 🟢 Startup |
+| Wednesday or Thursday | 🟡 Checkpoint |
+| Friday, Saturday, or Sunday | 🔴 Retrospectiva |
 
-Si el usuario dice genéricamente "hazme un resumen de la semana" o "¿cómo vamos?", usar la tabla anterior para elegir el formato apropiado.
+If the user says generically "give me a summary of the week" or "how are we doing?", use the table above to choose the appropriate format.
 
 ---
 
-## Tono y Estilo
+## Tone and Style
 
-- Usar emojis con moderación para hacer el reporte escaneable.
-- Ser directo en las recomendaciones — el usuario necesita claridad, no vaguedades.
-- Si existe `profile/coaching-rules.yaml`, respetar el tono configurado.
-- Las recomendaciones deben ser **1 acción concreta**, no una lista de deseos.
+- Use emojis sparingly to make the report scannable.
+- Be direct in recommendations — the user needs clarity, not vagueness.
+- If `profile/coaching-rules.yaml` exists, respect the configured tone.
+- Recommendations must be **1 concrete action**, not a wishlist.

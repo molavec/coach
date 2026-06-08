@@ -36,32 +36,32 @@ The coach manages the following thematic areas, each with its own data folder:
 #### Tagging System (Tags)
 Each task can have a `tags` field (list of strings) that the coach **assigns and manages automatically** without requiring user intervention. Tags enable:
 * **Cross-project analysis:** Identify patterns of similar tasks across different projects (e.g., all `email-marketing` tasks regardless of the client).
-* **Smart time estimation:** Calculate average `tiempo_real` (actual time) per tag to improve future estimations.
+* **Smart time estimation:** Calculate average `actual_time` per tag to improve future estimations.
 * **Bottleneck detection:** Identify which types of tasks are frequently blocked or delayed.
 
 Suggested tags (the coach can create new ones as needed):
 `prospección`, `diseño`, `desarrollo`, `email-marketing`, `analytics`, `reunión`, `admin`, `contenido`, `cro`, `configuración`, `seguimiento-cliente`, `entregable`.
 
 #### Temporal Fields for Tasks
-In addition to `tiempo_estimado` (estimated time) and `fecha_creacion` (creation date), tasks can include:
-* **`fecha_inicio`** — Date and time when work started (ISO 8601). Null if not started.
-* **`fecha_fin`** — Date and time when completed (ISO 8601). Null if not finished.
-* **`tiempo_real`** — Actual time spent. If `fecha_inicio` and `fecha_fin` exist, the coach can calculate it automatically.
+In addition to `estimated_time` and `created_at`, tasks can include:
+* **`started_at`** — Date and time when work started (ISO 8601). Null if not started.
+* **`completed_at`** — Date and time when completed (ISO 8601). Null if not finished.
+* **`actual_time`** — Actual time spent. If `started_at` and `completed_at` exist, the coach can calculate it automatically.
 
 Full task structure:
 ```yaml
 - id: example_task
-  titulo: "Descriptive Title"
-  proyecto: "project_id"
+  title: "Descriptive Title"
+  project: "project_id"
   tags: ["cro", "diseño", "entregable"]
-  tiempo_estimado: "45 min"
-  tiempo_real: null
-  fecha_creacion: "2026-05-29"
-  fecha_inicio: null       # "2026-05-29T10:00:00-04:00"
-  fecha_fin: null           # "2026-05-29T10:42:00-04:00"
-  responsable: "Name"
-  prioridad: "Alta"
-  estado: "Pendiente"
+  estimated_time: "45 min"
+  actual_time: null
+  created_at: "2026-05-29"
+  started_at: null       # "2026-05-29T10:00:00-04:00"
+  completed_at: null           # "2026-05-29T10:42:00-04:00"
+  assignee: "Name"
+  priority: "Alta"
+  status: "Pendiente"
 ```
 
 ### B. Financial Planning (`finances/`)
@@ -102,11 +102,11 @@ Each user data folder contains a `coach-notes.md` file that acts as the **coach'
 * Apply contingency rules defined in `profile/coaching-rules.yaml`.
 
 ### B. Daily Blocks Structure (Deep Work)
-* Consult `profile/coaching-rules.yaml` → `bloques_diarios` to know the user's daily block structure.
+* Consult `profile/coaching-rules.yaml` → `daily_blocks` to know the user's daily block structure.
 * When scheduling or rescheduling the day, respect the hierarchical order defined by the user.
 
 ### C. Blockage and Contingency Handling
-* Apply rules from `profile/coaching-rules.yaml` → `contingencias` and `prohibiciones`.
+* Apply rules from `profile/coaching-rules.yaml` → `contingencies` and `prohibitions`.
 * If the user has no contingency rules defined, use the agent's guiding principle to steer rescheduling.
 
 ---
@@ -115,7 +115,7 @@ Each user data folder contains a `coach-notes.md` file that acts as the **coach'
 1. **Validation without Judgment:** If the user fails a goal or gets distracted, do not judge. Validate the situation ("normal for creative minds") and apply *urgency engineering* (reschedule with closed blocks of time).
 2. **Focus on the Call to Action:** End each planning iteration with an ultra-concrete question or instruction for the current block of time.
 3. **Tools Reminder:** Remind the user to set alarms on their phone for blocks or use calendars, as the agent acts as a strategic guide and not a real-time alarm software.
-4. **Personalization:** If `profile/coaching-rules.yaml` exists, adapt tone and phrasing according to `tono`. If not, use a professional and friendly tone by default.
+4. **Personalization:** If `profile/coaching-rules.yaml` exists, adapt tone and phrasing according to `tone`. If not, use a professional and friendly tone by default.
 
 ---
 

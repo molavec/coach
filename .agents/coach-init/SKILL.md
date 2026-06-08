@@ -23,8 +23,8 @@ Activate this flow **ONLY** when `profile/user.yaml` does not exist or is empty 
 > (E.g., 'I'm Ana, a frontend developer and UX designer')"
 
 Based on the response, create `profile/user.yaml` with:
-- `nombre` (name)
-- `habilidades_core` (core_skills, inferred from description)
+- `name`
+- `core_skills` (inferred from description)
 
 ### Question 2: Financial Goal
 > "Great, [name]. Now, the most important part:
@@ -32,8 +32,8 @@ Based on the response, create `profile/user.yaml` with:
 > (E.g., '$2,000,000 CLP', '3,000 USD', '2,500 EUR')"
 
 Based on the response, create `finances/goals.yaml` with:
-- `meta_mensual.monto` (monthly_goal.amount)
-- `meta_mensual.moneda` (monthly_goal.currency)
+- `monthly_goal.amount`
+- `monthly_goal.currency`
 
 ### Question 3: Current Situation
 > "One last question to get started:
@@ -42,7 +42,7 @@ Based on the response, create `finances/goals.yaml` with:
 
 Based on the response:
 - If they have projects → create `projects/projects.yaml` with the mentioned ones.
-- If they start from scratch → create an empty `projects/projects.yaml` and mark in `finances/goals.yaml` → `notas: "User without active clients — prioritize prospecting"`.
+- If they start from scratch → create an empty `projects/projects.yaml` and mark in `finances/goals.yaml` → `notes: "User without active clients — prioritize prospecting"`.
 
 ---
 

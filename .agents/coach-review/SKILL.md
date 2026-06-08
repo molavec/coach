@@ -137,7 +137,7 @@ Before generating any report, the agent must read:
 - If the monthly financial gap is critical → the recommendation must be prospecting or sales closure, not internal development.
 - If the user completed > 80% → celebrate genuinely and raise the level of ambition for the next week.
 - If the user completed < 40% → do not judge, identify the root cause (excessive scope? external blockers? lack of energy?) and propose adjustments.
-- Save the retrospective in `growth/reflections/[date]-retrospectiva.md` for historical records.
+- Save the retrospective in `growth/reflections/[date]-retrospective.md` for historical records.
 - Close with: **"Anything you want to add before planning next week?"**
 
 ---

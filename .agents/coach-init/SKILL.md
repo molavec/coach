@@ -1,17 +1,17 @@
 ---
 name: coach-init
-description: 'Initial onboarding for the coach. Activates when the user profile (profile/user.yaml) does not exist or is empty. Guides a minimum viable setup by asking only 3 essential questions and leaves the rest for progressive discovery in future conversations.'
+description: 'Initial onboarding for the coach. Activates when the user profile (user_profile table in coach.db) does not exist or is empty. Guides a minimum viable setup by asking only 3 essential questions and leaves the rest for progressive discovery in future conversations.'
 ---
 
 ## Purpose
 
-This skill handles the **first contact** with a new user. The goal is to create a minimum viable setup that allows the coach to operate immediately, without overwhelming the user with too many questions.
+This skill handles the **first contact** with a new user. The goal is to create a minimum viable setup in SQLite database `coach.db` that allows the coach to operate immediately, without overwhelming the user with too many questions.
 
 ---
 
 ## When to Activate
 
-Activate this flow **ONLY** when `profile/user.yaml` does not exist or is empty (contains no real data).
+Activate this flow **ONLY** when `SELECT COUNT(*) FROM user_profile;` in `coach.db` returns `0` (or database is not initialized).
 
 ---
 
@@ -22,18 +22,22 @@ Activate this flow **ONLY** when `profile/user.yaml` does not exist or is empty 
 > **What is your name and what do you do professionally?**
 > (E.g., 'I'm Ana, a frontend developer and UX designer')"
 
-Based on the response, create `profile/user.yaml` with:
-- `name`
-- `core_skills` (inferred from description)
+Based on the response, insert into `user_profile` table:
+```sql
+INSERT INTO user_profile (name, core_skills) 
+VALUES ('Name', 'Inferred core skills');
+```
 
 ### Question 2: Financial Goal
 > "Great, [name]. Now, the most important part:
 > **What is your monthly income goal and what currency do you work with?**
 > (E.g., '$2,000,000 CLP', '3,000 USD', '2,500 EUR')"
 
-Based on the response, create `finances/goals.yaml` with:
-- `monthly_goal.amount`
-- `monthly_goal.currency`
+Based on the response, insert into `financial_goals` table:
+```sql
+INSERT INTO financial_goals (period, monthly_amount, currency) 
+VALUES (strftime('%Y-%m', 'now'), 2000000, 'CLP');
+```
 
 ### Question 3: Current Situation
 > "One last question to get started:
@@ -41,8 +45,15 @@ Based on the response, create `finances/goals.yaml` with:
 > If you do, please name the main ones."
 
 Based on the response:
-- If they have projects → create `projects/projects.yaml` with the mentioned ones.
-- If they start from scratch → create an empty `projects/projects.yaml` and mark in `finances/goals.yaml` → `notes: "User without active clients — prioritize prospecting"`.
+- If they have projects → insert into `projects` table with the mentioned ones:
+  ```sql
+  INSERT INTO projects (id, name, status) VALUES ('proj_slug', 'Project Name', 'Activo');
+  ```
+- If they start from scratch → mark in `financial_goals` table:
+  ```sql
+  UPDATE financial_goals SET notes = 'User without active clients — prioritize prospecting' 
+  WHERE period = strftime('%Y-%m', 'now');
+  ```
 
 ---
 
@@ -50,37 +61,37 @@ Based on the response:
 
 After the 3 questions, the coach should:
 
-1. Display a summary of the configuration.
+1. Display a summary of the configuration saved in SQLite.
 2. Offer to start working immediately.
 3. Template message:
 
-> "Done, [name]. I have the basics to start working. As we talk, I'll learn more about you — your routine, your services, your working style — and adjust my coaching accordingly.
+> "Done, [name]. I have stored the basics in SQLite to start working. As we talk, I'll learn more about you — your routine, your services, your working style — and adjust my coaching accordingly.
 >
 > **What would you like us to focus on today?**"
 
 ---
 
-## Files Created
+## Database Tables Initialized
 
-| File | Initial Content |
+| Table | Initial Content |
 |---|---|
-| `profile/user.yaml` | Name and core skills |
-| `finances/goals.yaml` | Monthly income goal |
-| `projects/projects.yaml` | Active projects (or empty) |
-| `projects/tasks.yaml` | Empty (base structure) |
+| `user_profile` | Name and core skills |
+| `financial_goals` | Monthly income goal amount and currency |
+| `projects` | Active projects (or empty) |
+| `tasks` | Base schema ready (empty) |
 
 ---
 
-## Files NOT Created (Progressive Discovery)
+## Configuration Deferred to Progressive Discovery
 
-These are created later, when they arise organically in conversation:
+These tables are populated later, when requirements arise organically in conversation:
 
-| File | When to Create |
+| Table | When to Populate |
 |---|---|
-| `profile/design-system.yaml` | When the user mentions layouts, design, or landing pages |
-| `profile/coaching-rules.yaml` | After 2-3 sessions, once the coach identifies the user's patterns |
-| `finances/pricing.yaml` | When the user mentions quoting, charging, or selling services |
-| `finances/projections.yaml` | When discussing monthly financial planning |
-| `growth/focus-areas.yaml` | When focus patterns are identified in conversations |
-| `growth/checklists/*` | When the user needs to document SOPs for a project |
-| `growth/reflections/*` | When vocational reflections or personal development moments occur |
+| `design_system` | When the user mentions layouts, design, or landing pages |
+| `coaching_rules` | After 2-3 sessions, once the coach identifies the user's patterns |
+| `financial_pricing` | When the user mentions quoting, charging, or selling services |
+| `financial_projections` | When discussing monthly financial planning |
+| `growth_focus_areas` | When focus patterns are identified in conversations |
+| `growth_checklists` | When the user needs to document SOPs for a project |
+| `growth_reflections` | When vocational reflections or personal retrospectives occur (also exports markdown to `./growth/reflections/`) |

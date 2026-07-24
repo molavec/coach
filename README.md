@@ -9,7 +9,7 @@ This project implements an intelligent coaching assistant designed for senior te
 * **Radical Focus:** Prevents structured procrastination (such as coding personal tools instead of selling).
 * **Active Financial Management:** Maintains clear goals and plans contingency and prospecting actions during urgent periods.
 * **Continuous Learning:** Automatically analyzes time usage by categories to detect bottlenecks.
-* **Privacy by Design:** Personal and financial data remains secure locally in YAML and Markdown files.
+* **Privacy by Design:** Personal and financial data remains secure locally in an SQLite database (`coach.db`) and Markdown files.
 
 ---
 
@@ -23,15 +23,14 @@ The coach operates dynamically through three integrated stages:
 2. **Daily and Contextual Support:**  
    Manages your projects, automates smart task tagging, and estimates ideal times based on your history. You can dive deeper into operational, contingency, and inference rules by reading the [Core Coach Skill](file:///home/angel/git/agents/coach/.agents/coach/SKILL.md).
 
-3. **Weekly Reviews and Retrospectives:**  
-   Delivers startup reports (Mondays), speed checkpoints (Wednesdays), and week-ending reviews (Fridays), accumulating learnings continuously. Learn about templates and workflows in the [Reviews and Retrospectives Skill](file:///home/angel/git/agents/coach/.agents/coach-review/SKILL.md).
+3. **Weekly Checkpoints and Retrospectives:**  
+   Delivers startup reports (Mondays), speed checkpoints (Wednesdays), and week-ending reviews (Fridays), accumulating learnings continuously. Learn about templates and workflows in the [Checkpoint Skill](file:///home/angel/git/agents/coach/.agents/coach-checkpoint/SKILL.md).
 
 ---
 
 ## Workspace Structure
 
-* **`profile/`** — User profile, personalized coaching rules, and design systems.
-* **`projects/`** — Active projects, tasks database with statuses/tags, and archived history.
-* **`finances/`** — Monthly goals, service rates, and billing projections.
-* **`growth/`** — Vocational focus areas, reusable checklists, and retrospect logbook.
-* **`coach-notes.md`** — Local memory files updated autonomously by the coach in each thematic folder to remember historical patterns of your workflow.
+* **`coach.db`** — SQLite database holding user profile, projects, tasks, financial goals, projections, pricing catalog, focus areas, and institutional notes.
+* **`db/schema.sql`** — DDL database schema defining all relational tables.
+* **`growth/reflections/`** — Markdown copies of weekly retrospectives and vocational reflections.
+

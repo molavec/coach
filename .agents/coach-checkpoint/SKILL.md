@@ -1,6 +1,6 @@
 ---
-name: coach-review
-description: 'Weekly summaries and retrospectives. Generates a weekly kickoff (planning), a midweek checkpoint (course correction), and a wrap-up retrospective (learnings and replanning). Activates when the user asks for a weekly summary, weekly planning, retrospective, or the coach detects it is Monday/Wednesday/Friday.'
+name: coach-checkpoint
+description: 'Weekly summaries, checkpoints, and retrospectives. Generates a weekly kickoff (planning), a midweek checkpoint (course correction), and a wrap-up retrospective (learnings and replanning). Activates when the user asks for a weekly summary, weekly planning, retrospective, checkpoint, or the coach detects it is Monday/Wednesday/Friday.'
 ---
 
 ## Purpose
@@ -11,15 +11,15 @@ To give the user a panoramic and actionable view of their week at 3 key moments,
 
 ## Data Sources
 
-Before generating any report, the agent must read:
+Before generating any report, the agent must query SQLite database `coach.db`:
 
-1. **`projects/tasks.yaml`** — Active tasks, statuses, and estimated times.
-2. **`projects/projects.yaml`** — Active projects and priorities.
-3. **`finances/goals.yaml`** — Monthly financial goal.
-4. **`finances/projections.yaml`** — Projections for the current month.
-5. **`growth/focus-areas.yaml`** — Active focus areas.
-6. **`profile/user.yaml`** — User context.
-7. **`profile/coaching-rules.yaml`** *(if exists)* — Rules and time blocks.
+1. **`tasks` & `task_tags`** — Active tasks (`WHERE status != 'Completado' AND status != 'Archivado'`), statuses, estimated times, and actual times spent.
+2. **`projects`** — Active projects (`WHERE status = 'Activo'`) and priorities.
+3. **`financial_goals`** — Monthly financial goal (`WHERE period = strftime('%Y-%m', 'now')`).
+4. **`financial_projections`** — Income projections and actual billed for the current month.
+5. **`growth_focus_areas`** — Active focus areas (`WHERE status = 'Activo'`).
+6. **`user_profile`** — User context.
+7. **`coaching_rules`** *(if exists)* — Rules, daily blocks, tone, and contingencies.
 
 ---
 
@@ -137,7 +137,7 @@ Before generating any report, the agent must read:
 - If the monthly financial gap is critical → the recommendation must be prospecting or sales closure, not internal development.
 - If the user completed > 80% → celebrate genuinely and raise the level of ambition for the next week.
 - If the user completed < 40% → do not judge, identify the root cause (excessive scope? external blockers? lack of energy?) and propose adjustments.
-- Save the retrospective in `growth/reflections/[date]-retrospective.md` for historical records.
+- **Persistence:** Save the retrospective entry in `growth_reflections` table AND export a markdown copy in `growth/reflections/YYYY-MM-DD-retrospective.md`.
 - Close with: **"Anything you want to add before planning next week?"**
 
 ---
@@ -160,5 +160,5 @@ If the user says generically "give me a summary of the week" or "how are we doin
 
 - Use emojis sparingly to make the report scannable.
 - Be direct in recommendations — the user needs clarity, not vagueness.
-- If `profile/coaching-rules.yaml` exists, respect the configured tone.
+- If `coaching_rules` exists, respect configured `tone`.
 - Recommendations must be **1 concrete action**, not a wishlist.

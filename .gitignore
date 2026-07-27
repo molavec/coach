@@ -1,21 +1,28 @@
 # ==============================================================================
 # Coach — .gitignore
 # ==============================================================================
-# Excluye datos personales del usuario. Solo se commitean los skills,
-# la estructura del proyecto y el AGENTS.md (genéricos y reutilizables).
+# Excluye datos personales del usuario y entorno de Python.
+# Solo se commitean los skills, la estructura del proyecto y el AGENTS.md.
 # ==============================================================================
+
+# ─── Entorno de Python y caché ───
+.venv/
+env/
+venv/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
 
 # ─── Configuración personal del usuario ───
 profile/
 
-# ─── Datos financieros ───
+# ─── Datos financieros y base de datos ───
 finances/
+coach.db
 
 # ─── Proyectos, tareas y archivados ───
 projects/
 
 # ─── Crecimiento vocacional (checklists, reflexiones, áreas de enfoque) ───
 growth/
-
-# ─── Datos financieros ───
-coach.db

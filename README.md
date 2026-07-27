@@ -18,13 +18,13 @@ This project implements an intelligent coaching assistant designed for senior te
 The coach operates dynamically through three integrated stages:
 
 1. **Organic and Minimal Onboarding:**  
-   When starting for the first time, the coach asks three essential questions to set up your profile. To see how the initial onboarding works, check the [Onboarding Skill](file:///home/angel/git/agents/coach/.agents/coach-init/SKILL.md).
+   When starting for the first time, the coach asks three essential questions to set up your profile. To see how the initial onboarding works, check the [Onboarding Skill](file:///home/angel/git/agents/coach/.agents/skills/coach-init/SKILL.md).
 
 2. **Daily and Contextual Support:**  
-   Manages your projects, automates smart task tagging, and estimates ideal times based on your history. You can dive deeper into operational, contingency, and inference rules by reading the [Core Coach Skill](file:///home/angel/git/agents/coach/.agents/coach/SKILL.md).
+   Manages your projects, automates smart task tagging, and estimates ideal times based on your history. You can dive deeper into operational, contingency, and inference rules by reading the [Core Coach Skill](file:///home/angel/git/agents/coach/.agents/skills/coach/SKILL.md).
 
 3. **Weekly Checkpoints and Retrospectives:**  
-   Delivers startup reports (Mondays), speed checkpoints (Wednesdays), and week-ending reviews (Fridays), accumulating learnings continuously. Learn about templates and workflows in the [Checkpoint Skill](file:///home/angel/git/agents/coach/.agents/coach-checkpoint/SKILL.md).
+   Delivers startup reports (Mondays), speed checkpoints (Wednesdays), and week-ending reviews (Fridays), accumulating learnings continuously. Learn about templates and workflows in the [Checkpoint Skill](file:///home/angel/git/agents/coach/.agents/skills/coach-checkpoint/SKILL.md).
 
 ---
 

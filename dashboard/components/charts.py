@@ -9,6 +9,15 @@ COLOR_ESSENTIAL = "#F39C12"
 COLOR_DISCRETIONARY = "#9B59B6"
 COLOR_SAVINGS = "#1ABC9C"
 
+# Configuración estándar para colocar la leyenda en la parte inferior de los gráficos
+LEGEND_BOTTOM_CONFIG = dict(
+    orientation="h",
+    yanchor="top",
+    y=-0.2,
+    xanchor="center",
+    x=0.5
+)
+
 def plot_cash_flow_monthly(cash_flow_df):
     """Plot monthly income vs expenses bar chart."""
     if cash_flow_df.empty:
@@ -42,9 +51,9 @@ def plot_cash_flow_monthly(cash_flow_df):
         barmode='group',
         xaxis_title="Mes",
         yaxis_title="Monto (CLP)",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        legend=LEGEND_BOTTOM_CONFIG,
         template="plotly_white",
-        margin=dict(l=20, r=20, t=50, b=20)
+        margin=dict(l=20, r=20, t=50, b=60)
     )
     return fig
 
@@ -66,7 +75,11 @@ def plot_category_distribution(transactions_df):
         color_discrete_sequence=px.colors.qualitative.Pastel
     )
     fig.update_traces(textposition='inside', textinfo='percent+label')
-    fig.update_layout(template="plotly_white", margin=dict(l=20, r=20, t=50, b=20))
+    fig.update_layout(
+        template="plotly_white",
+        legend=LEGEND_BOTTOM_CONFIG,
+        margin=dict(l=20, r=20, t=50, b=60)
+    )
     return fig
 
 def plot_50_30_20_breakdown(transactions_df):
@@ -94,7 +107,11 @@ def plot_50_30_20_breakdown(transactions_df):
             'Deseo / Estilo de Vida (30%)': COLOR_DISCRETIONARY
         }
     )
-    fig.update_layout(showlegend=False, template="plotly_white", margin=dict(l=20, r=20, t=50, b=20))
+    fig.update_layout(
+        legend=LEGEND_BOTTOM_CONFIG,
+        template="plotly_white",
+        margin=dict(l=20, r=20, t=50, b=60)
+    )
     return fig
 
 def plot_account_balances(accounts_df):
@@ -114,7 +131,12 @@ def plot_account_balances(accounts_df):
         color='type',
         color_discrete_sequence=px.colors.qualitative.Set2
     )
-    fig.update_layout(template="plotly_white", yaxis=dict(autorange="reversed"), margin=dict(l=20, r=20, t=50, b=20))
+    fig.update_layout(
+        template="plotly_white",
+        yaxis=dict(autorange="reversed"),
+        legend=LEGEND_BOTTOM_CONFIG,
+        margin=dict(l=20, r=20, t=50, b=60)
+    )
     return fig
 
 def plot_budget_vs_actual(budgets_df):
@@ -145,8 +167,9 @@ def plot_budget_vs_actual(budgets_df):
         barmode='group',
         xaxis_title="Monto (CLP)",
         yaxis_title="Categoría",
+        legend=LEGEND_BOTTOM_CONFIG,
         template="plotly_white",
-        margin=dict(l=20, r=20, t=50, b=20)
+        margin=dict(l=20, r=20, t=50, b=60)
     )
     return fig
 
@@ -168,5 +191,9 @@ def plot_tasks_status(tasks_df):
         hole=0.4,
         color_discrete_sequence=px.colors.qualitative.Safe
     )
-    fig.update_layout(template="plotly_white", margin=dict(l=20, r=20, t=50, b=20))
+    fig.update_layout(
+        template="plotly_white",
+        legend=LEGEND_BOTTOM_CONFIG,
+        margin=dict(l=20, r=20, t=50, b=60)
+    )
     return fig

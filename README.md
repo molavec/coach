@@ -28,9 +28,34 @@ The coach operates dynamically through three integrated stages:
 
 ---
 
+## Streamlit Dashboard
+
+To visualize financial metrics, active projects, tasks, and generate Excel reports, run the dashboard management script:
+
+```bash
+# Start in background
+./dashboard.sh start
+
+# Check status
+./dashboard.sh status
+
+# Stop server
+./dashboard.sh stop
+
+# Start in foreground (Ctrl+C to stop)
+./dashboard.sh
+```
+
+The dashboard will be available at `http://localhost:8501`.
+
+---
+
 ## Workspace Structure
 
+* **`dashboard.sh`** — Executable management script to start, stop, or check status of the Streamlit dashboard.
+* **`dashboard/`** — Streamlit app files and components.
 * **`coach.db`** — SQLite database holding user profile, projects, tasks, financial goals, projections, pricing catalog, focus areas, and institutional notes.
 * **`db/schema.sql`** — DDL database schema defining all relational tables.
 * **`growth/reflections/`** — Markdown copies of weekly retrospectives and vocational reflections.
+
 

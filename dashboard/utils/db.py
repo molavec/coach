@@ -177,3 +177,152 @@ def load_projects_and_tasks():
     """, conn)
     conn.close()
     return projects_df, tasks_df
+
+def add_transaction(date_str, type_str, amount, currency, account_id, destination_account_id, category_id, description, status='Completado', is_recurring=0):
+    """Insert a new transaction and update relevant account balances."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            INSERT INTO transactions (
+                date, type, amount, currency, account_id, destination_account_id, category_id, description, status, is_recurring
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (date_str, type_str, float(amount), currency, account_id, destination_account_id, category_id, description, status, int(is_recurring)))
+
+        if type_str == 'Egreso':
+            cursor.execute("""
+                UPDATE accounts 
+                SET balance = balance - ?, updated_at = CURRENT_TIMESTAMP 
+                WHERE id = ?
+            """, (float(amount), account_id))
+        elif type_str == 'Ingreso':
+            cursor.execute("""
+                UPDATE accounts 
+                SET balance = balance + ?, updated_at = CURRENT_TIMESTAMP 
+                WHERE id = ?
+            """, (float(amount), account_id))
+        elif type_str == 'Transferencia':
+            cursor.execute("""
+                UPDATE accounts 
+                SET balance = balance - ?, updated_at = CURRENT_TIMESTAMP 
+                WHERE id = ?
+            """, (float(amount), account_id))
+            if destination_account_id:
+                cursor.execute("""
+                    UPDATE accounts 
+                    SET balance = balance + ?, updated_at = CURRENT_TIMESTAMP 
+                    WHERE id = ?
+                """, (float(amount), destination_account_id))
+
+        conn.commit()
+        st.cache_data.clear()
+        return True, "Transacción registrada exitosamente."
+    except Exception as e:
+        conn.rollback()
+        return False, str(e)
+    finally:
+        conn.close()
+
+def delete_transaction(transaction_id):
+    """Delete a transaction and revert its effect on account balances."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT type, amount, account_id, destination_account_id FROM transactions WHERE id = ?", (transaction_id,))
+        tx = cursor.fetchone()
+        if not tx:
+            return False, "La transacción especificada no existe."
+
+        t_type = tx['type']
+        amount = float(tx['amount'])
+        account_id = tx['account_id']
+        dest_account_id = tx['destination_account_id']
+
+        if t_type == 'Egreso':
+            cursor.execute("""
+                UPDATE accounts 
+                SET balance = balance + ?, updated_at = CURRENT_TIMESTAMP 
+                WHERE id = ?
+            """, (amount, account_id))
+        elif t_type == 'Ingreso':
+            cursor.execute("""
+                UPDATE accounts 
+                SET balance = balance - ?, updated_at = CURRENT_TIMESTAMP 
+                WHERE id = ?
+            """, (amount, account_id))
+        elif t_type == 'Transferencia':
+            cursor.execute("""
+                UPDATE accounts 
+                SET balance = balance + ?, updated_at = CURRENT_TIMESTAMP 
+                WHERE id = ?
+            """, (amount, account_id))
+            if dest_account_id:
+                cursor.execute("""
+                    UPDATE accounts 
+                    SET balance = balance - ?, updated_at = CURRENT_TIMESTAMP 
+                    WHERE id = ?
+                """, (amount, dest_account_id))
+
+        cursor.execute("DELETE FROM transactions WHERE id = ?", (transaction_id,))
+        conn.commit()
+        st.cache_data.clear()
+        return True, "Transacción eliminada exitosamente y saldo de cuenta actualizado."
+    except Exception as e:
+        conn.rollback()
+        return False, str(e)
+    finally:
+        conn.close()
+
+def update_transaction(transaction_id, date_str, type_str, amount, currency, account_id, destination_account_id, category_id, description, status='Completado', is_recurring=0):
+    """Update an existing transaction and adjust account balances accordingly."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT type, amount, account_id, destination_account_id FROM transactions WHERE id = ?", (transaction_id,))
+        old_tx = cursor.fetchone()
+        if not old_tx:
+            return False, "La transacción a actualizar no existe."
+
+        old_type = old_tx['type']
+        old_amount = float(old_tx['amount'])
+        old_account_id = old_tx['account_id']
+        old_dest_account_id = old_tx['destination_account_id']
+
+        # Revert old balance effect
+        if old_type == 'Egreso':
+            cursor.execute("UPDATE accounts SET balance = balance + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", (old_amount, old_account_id))
+        elif old_type == 'Ingreso':
+            cursor.execute("UPDATE accounts SET balance = balance - ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", (old_amount, old_account_id))
+        elif old_type == 'Transferencia':
+            cursor.execute("UPDATE accounts SET balance = balance + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", (old_amount, old_account_id))
+            if old_dest_account_id:
+                cursor.execute("UPDATE accounts SET balance = balance - ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", (old_amount, old_dest_account_id))
+
+        # Apply new balance effect
+        amount = float(amount)
+        if type_str == 'Egreso':
+            cursor.execute("UPDATE accounts SET balance = balance - ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", (amount, account_id))
+        elif type_str == 'Ingreso':
+            cursor.execute("UPDATE accounts SET balance = balance + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", (amount, account_id))
+        elif type_str == 'Transferencia':
+            cursor.execute("UPDATE accounts SET balance = balance - ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", (amount, account_id))
+            if destination_account_id:
+                cursor.execute("UPDATE accounts SET balance = balance + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", (amount, destination_account_id))
+
+        # Update transactions record
+        cursor.execute("""
+            UPDATE transactions
+            SET date = ?, type = ?, amount = ?, currency = ?, account_id = ?, destination_account_id = ?, category_id = ?, description = ?, status = ?, is_recurring = ?
+            WHERE id = ?
+        """, (date_str, type_str, amount, currency, account_id, destination_account_id, category_id, description, status, int(is_recurring), transaction_id))
+
+        conn.commit()
+        st.cache_data.clear()
+        return True, "Transacción actualizada exitosamente."
+    except Exception as e:
+        conn.rollback()
+        return False, str(e)
+    finally:
+        conn.close()
+
+

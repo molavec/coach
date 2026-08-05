@@ -26,3 +26,6 @@ projects/
 
 # ─── Crecimiento vocacional (checklists, reflexiones, áreas de enfoque) ───
 growth/
+
+# ─── PID temporal de Dashboard ───
+.dashboard.pid

@@ -1,190 +1,105 @@
 import streamlit as st
-import pandas as pd
-import datetime
-
-from utils.db import (
-    load_accounts, load_transactions, load_pending_payments,
-    load_savings_goals, load_budgets_vs_actual, load_cash_flow_monthly,
-    load_projects_and_tasks
-)
-from utils.excel_exporter import generate_excel_report
-from components.kpis import render_financial_kpis, render_task_kpis
-from components.charts import (
-    plot_cash_flow_monthly, plot_category_distribution,
-    plot_50_30_20_breakdown, plot_account_balances,
-    plot_budget_vs_actual, plot_tasks_status
-)
-from components.tables import render_pending_payments_table, render_savings_goals_table
 
 # Configure Streamlit page layout and theme
 st.set_page_config(
-    page_title="Coach Dashboard — Finanzas & Productividad",
+    page_title="Coach",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Header
-st.title("📊 Coach Dashboard — Finanzas & Productividad")
-st.caption("Sistema de gestión estratégica de finanzas personales y ejecución de proyectos.")
+# Custom CSS to collapse stSidebarHeader height and streamline sidebar layout
+st.markdown("""
+    <style>
+    /* 1. Colapsar el contenedor del header del sidebar (stSidebarHeader / eelgd2m4) a alto 0 para que no sobresalga */
+    header[data-testid="stSidebarHeader"],
+    div[data-testid="stSidebarHeader"] {
+        height: 0 !important;
+        min-height: 0 !important;
+        max-height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        background: transparent !important;
+    }
 
-# Sidebar Filters
-st.sidebar.header("🔍 Filtros & Ajustes")
-if st.sidebar.button("🔄 Recargar Datos"):
-    st.cache_data.clear()
-    st.rerun()
+    /* Posicionar exclusivamente el botón de toggle dentro del bloque de título Coach a la derecha */
+    header[data-testid="stSidebarHeader"] button,
+    div[data-testid="stSidebarHeader"] button,
+    button[data-testid="stSidebarCollapseButton"] {
+        position: absolute !important;
+        top: 0.5rem !important;
+        right: 0.5rem !important;
+        z-index: 9999 !important;
+        margin: 0 !important;
+    }
 
-# Load Data
-accounts_df = load_accounts()
-transactions_df = load_transactions(limit=1000)
-pending_df = load_pending_payments()
-savings_df = load_savings_goals()
-budgets_df = load_budgets_vs_actual()
-cash_flow_df = load_cash_flow_monthly()
-projects_df, tasks_df = load_projects_and_tasks()
+    /* 2. Optimización de relleno e interior del sidebar */
+    div[data-testid="stSidebarContent"] {
+        padding-top: 0.5rem !important;
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+    }
+    div[data-testid="stSidebarUserContent"] {
+        padding-top: 0.1rem !important;
+        padding-left: 0.25rem !important;
+        padding-right: 0.25rem !important;
+    }
 
-# Global Financial Calculations
-total_income = transactions_df[transactions_df['type'] == 'Ingreso']['amount'].sum() if not transactions_df.empty else 0
-total_expense = transactions_df[transactions_df['type'] == 'Egreso']['amount'].sum() if not transactions_df.empty else 0
-net_flow = total_income - total_expense
-total_liquidity = accounts_df['balance'].sum() if not accounts_df.empty else 0
+    /* Título 'Coach' compacto y bien alineado */
+    div[data-testid="stSidebarUserContent"] h1 {
+        font-size: 1.5rem !important;
+        font-weight: 700 !important;
+        margin-top: 0rem !important;
+        margin-bottom: 0.75rem !important;
+        padding-top: 0.2rem !important;
+        line-height: 1.2 !important;
+    }
 
-# Runway calculation (Monthly average expense)
-avg_monthly_expense = total_expense if total_expense > 0 else 1
-runway_months = (total_liquidity / avg_monthly_expense) if avg_monthly_expense > 0 else 0
+    /* Margen para el botón de acción en el sidebar */
+    div[data-testid="stSidebarUserContent"] div.stButton {
+        margin-top: 1rem !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-# Main Tabs Navigation
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    "📊 Flujo de Caja & Resumen", 
-    "🛡️ Patrimonio & Cuentas", 
-    "🚨 Presupuestos & Pendientes", 
-    "🎯 Productividad (Coach)",
-    "📥 Exportar a Excel"
-])
+# Definir páginas multipágina
+page_cash_flow = st.Page("pages/cash_flow.py", title="Flujo de Caja & Resumen", icon="📊", default=True)
+page_transactions = st.Page("pages/transactions.py", title="Transacciones", icon="💸")
+page_accounts = st.Page("pages/accounts.py", title="Patrimonio & Cuentas", icon="🛡️")
+page_budgets = st.Page("pages/budgets.py", title="Presupuestos & Pendientes", icon="🚨")
+page_productivity = st.Page("pages/productivity.py", title="Productividad (Coach)", icon="🎯")
+page_export = st.Page("pages/export.py", title="Exportar a Excel", icon="📥")
 
-# -----------------------------------------------------------------------------
-# TAB 1: Flujo de Caja & Resumen Financiero
-# -----------------------------------------------------------------------------
-with tab1:
-    st.header("💰 Resumen Financiero")
-    render_financial_kpis(total_income, total_expense, net_flow, total_liquidity, runway_months)
-    st.divider()
+# Inicializar Navegación oculta (para renderizarla manualmente con control de orden)
+pg = st.navigation(
+    [page_cash_flow, page_transactions, page_accounts, page_budgets, page_productivity, page_export]
+)
 
-    c1, c2 = st.columns([7, 5])
-    with c1:
-        st.plotly_chart(plot_cash_flow_monthly(cash_flow_df), use_container_width=True)
-    with c2:
-        st.plotly_chart(plot_category_distribution(transactions_df), use_container_width=True)
+# Renderizar Sidebar personalizado: Título PRIMERO, luego los links de navegación
+# st.sidebar.title("Coach")
+# st.sidebar.page_link(page_cash_flow)
+# st.sidebar.page_link(page_accounts)
+# st.sidebar.page_link(page_budgets)
+# st.sidebar.page_link(page_productivity)
+# st.sidebar.page_link(page_export)
 
-    st.divider()
-    st.plotly_chart(plot_50_30_20_breakdown(transactions_df), use_container_width=True)
+# Inyectar dinámicamente el título de la página activa en el header principal
+st.markdown(f"""
+    <style>
+    header[data-testid="stHeader"]::after {{
+        content: "{pg.title}";
+        font-size: 1.25rem;
+        font-weight: 700;
+        position: absolute;
+        left: 3.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        white-space: nowrap;
+        pointer-events: none;
+    }}
+    </style>
+""", unsafe_allow_html=True)
 
-# -----------------------------------------------------------------------------
-# TAB 2: Patrimonio Neto & Saldos de Cuentas
-# -----------------------------------------------------------------------------
-with tab2:
-    st.header("🏦 Cuentas Financieras & Solvencia")
-    c1, c2 = st.columns([6, 6])
-    
-    with c1:
-        st.plotly_chart(plot_account_balances(accounts_df), use_container_width=True)
-    with c2:
-        st.subheader("📋 Detalle de Cuentas")
-        if not accounts_df.empty:
-            st.dataframe(
-                accounts_df[['name', 'type', 'currency', 'balance', 'updated_at']],
-                column_config={
-                    'name': 'Cuenta',
-                    'type': 'Tipo',
-                    'currency': 'Moneda',
-                    'balance': st.column_config.NumberColumn('Saldo Conciliado', format="$%.0f"),
-                    'updated_at': 'Última Actualización'
-                },
-                use_container_width=True,
-                hide_index=True
-            )
-        else:
-            st.info("Sin cuentas registradas en `accounts`.")
-
-    st.divider()
-    render_savings_goals_table(savings_df)
-
-# -----------------------------------------------------------------------------
-# TAB 3: Presupuestos & Radar de Pendientes
-# -----------------------------------------------------------------------------
-with tab3:
-    st.header("🚨 Presupuestos & Radar de Vencimientos")
-    
-    st.plotly_chart(plot_budget_vs_actual(budgets_df), use_container_width=True)
-    st.divider()
-    render_pending_payments_table(pending_df)
-
-# -----------------------------------------------------------------------------
-# TAB 4: Productividad de Proyectos & Tareas
-# -----------------------------------------------------------------------------
-with tab4:
-    st.header("🎯 Métricas de Productividad & Proyectos")
-    
-    total_tasks = len(tasks_df) if not tasks_df.empty else 0
-    completed_tasks = len(tasks_df[tasks_df['status'] == 'Completado']) if not tasks_df.empty else 0
-    in_progress_tasks = len(tasks_df[tasks_df['status'] == 'En Progreso']) if not tasks_df.empty else 0
-    pending_tasks = total_tasks - completed_tasks - in_progress_tasks
-    
-    render_task_kpis(total_tasks, completed_tasks, in_progress_tasks, pending_tasks)
-    st.divider()
-
-    c1, c2 = st.columns([6, 6])
-    with c1:
-        st.plotly_chart(plot_tasks_status(tasks_df), use_container_width=True)
-    with c2:
-        st.subheader("🚀 Proyectos Activos")
-        if not projects_df.empty:
-            st.dataframe(
-                projects_df[['id', 'name', 'priority', 'status']],
-                column_config={
-                    'id': 'ID',
-                    'name': 'Proyecto',
-                    'priority': 'Prioridad',
-                    'status': 'Estado'
-                },
-                use_container_width=True,
-                hide_index=True
-            )
-        else:
-            st.info("No hay proyectos activos registrados.")
-
-    st.divider()
-    st.subheader("📋 Lista de Tareas Recientes")
-    if not tasks_df.empty:
-        st.dataframe(
-            tasks_df[['title', 'project_name', 'priority', 'status', 'estimated_time', 'actual_time']],
-            column_config={
-                'title': 'Título Tarea',
-                'project_name': 'Proyecto',
-                'priority': 'Prioridad',
-                'status': 'Estado',
-                'estimated_time': 'Tiempo Est.',
-                'actual_time': 'Tiempo Real'
-            },
-            use_container_width=True,
-            hide_index=True
-        )
-
-# -----------------------------------------------------------------------------
-# TAB 5: Exportar a Excel
-# -----------------------------------------------------------------------------
-with tab5:
-    st.header("📥 Exportación de Reporte Financiero a Excel")
-    st.write("Genera y descarga un libro de Excel (`.xlsx`) completo con múltiples pestañas conteniendo el saldo de cuentas, historial de transacciones, cobros/pagos pendientes y ejecución presupuestaria.")
-    
-    if st.button("📊 Generar Reporte Excel"):
-        with st.spinner("Generando archivo Excel con openpyxl..."):
-            excel_bytes = generate_excel_report()
-            filename = f"Reporte_Financiero_Coach_{datetime.date.today().strftime('%Y-%m-%d')}.xlsx"
-            st.download_button(
-                label="💾 Descargar Archivo Excel (.xlsx)",
-                data=excel_bytes,
-                file_name=filename,
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
-            st.success("✅ ¡Reporte generado con éxito! Haz clic en el botón superior para descargar.")
+# Ejecutar la página activa
+pg.run()

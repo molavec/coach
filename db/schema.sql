@@ -161,6 +161,27 @@ CREATE TABLE IF NOT EXISTS accounts (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP  -- Fecha y hora de última actualización de saldo o datos
 );
 
+-- 1.a Credit Cards Info (Detalles específicos para Tarjetas de Crédito)
+CREATE TABLE IF NOT EXISTS credit_cards_info (
+    account_id INTEGER PRIMARY KEY,
+    limit_clp REAL DEFAULT 0.0,
+    limit_usd REAL DEFAULT 0.0,
+    available_clp REAL DEFAULT 0.0,
+    available_usd REAL DEFAULT 0.0,
+    payment_day INTEGER,
+    commission_value REAL DEFAULT 0.0,
+    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
+);
+
+-- 1.b Bank Accounts Info (Detalles específicos para Cuentas Bancarias)
+CREATE TABLE IF NOT EXISTS bank_accounts_info (
+    account_id INTEGER PRIMARY KEY,
+    overdraft_limit REAL DEFAULT 0.0,
+    payment_day INTEGER,
+    commission_value REAL DEFAULT 0.0,
+    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
+);
+
 -- 2. Categories (Categorías y Subcategorías con clasificación 50/30/20)
 CREATE TABLE IF NOT EXISTS categories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,        -- Identificador único de la categoría
@@ -185,6 +206,7 @@ CREATE TABLE IF NOT EXISTS transactions (
     description TEXT,                           -- Detalle o nota explicativa del movimiento (ej: 'Supermercado Lider', 'Pago cliente X')
     status TEXT DEFAULT 'Completado',            -- Estado del movimiento: 'Completado', 'Pendiente', 'Cancelado'
     is_recurring INTEGER DEFAULT 0,             -- Flag de recurrencia: 1 si es suscripción o gasto fijo mensual, 0 si es puntual
+    installments INTEGER DEFAULT 1,             -- Número de cuotas (para compras con tarjeta de crédito)
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP, -- Fecha y hora de registro en la base de datos
     FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE,
     FOREIGN KEY (destination_account_id) REFERENCES accounts(id) ON DELETE SET NULL,

@@ -9,6 +9,36 @@ from utils.db import (
     update_transaction,
     delete_transaction
 )
+from core.services.finance_service import process_credit_card_expense
+
+def get_date_range(filter_range: str, today: datetime.date, custom_start=None, custom_end=None):
+    if filter_range == "Hoy":
+        return today, today
+    if filter_range == "Últimos 7 días":
+        return today - datetime.timedelta(days=6), today
+    if filter_range == "Últimos 30 días":
+        return today - datetime.timedelta(days=29), today
+    if filter_range == "Esta semana":
+        start = today - datetime.timedelta(days=today.weekday())
+        return start, start + datetime.timedelta(days=6)
+    if filter_range == "Este mes":
+        start = today.replace(day=1)
+        next_month = (today.replace(day=28) + datetime.timedelta(days=4)).replace(day=1)
+        return start, next_month - datetime.timedelta(days=1)
+    if filter_range == "Mes anterior":
+        first_of_this_month = today.replace(day=1)
+        end = first_of_this_month - datetime.timedelta(days=1)
+        return end.replace(day=1), end
+    if filter_range == "Este año":
+        return today.replace(month=1, day=1), today.replace(month=12, day=31)
+    if filter_range == "Personalizado" and custom_start:
+        return custom_start, custom_end or custom_start
+    return None, None
+
+def parse_date(raw_date):
+    if isinstance(raw_date, (datetime.date, datetime.datetime)):
+        return raw_date.strftime("%Y-%m-%d")
+    return str(raw_date)
 
 # Cargar datos desde SQLite
 accounts_df = load_accounts()
@@ -73,7 +103,10 @@ if filter_date_range == "Personalizado":
             custom_start_date = custom_end_date = custom_dates[0]
 
 # Pre-procesado y Filtrado de DataFrame
-filtered_df = transactions_df.copy() if not transactions_df.empty else pd.DataFrame()
+filtered_df = transactions_df.copy()
+
+if transactions_df.empty:
+    st.info("👋 **Sin transacciones.** Añade tu primera transacción interactuando con la tabla de abajo.")
 
 if not filtered_df.empty:
     # 1. Conversión de tipos
@@ -84,35 +117,7 @@ if not filtered_df.empty:
 
     # 2. Filtro de Fechas
     if filter_date_range != "Todas las fechas":
-        start_date = None
-        end_date = None
-
-        if filter_date_range == "Hoy":
-            start_date = end_date = today
-        elif filter_date_range == "Últimos 7 días":
-            start_date = today - datetime.timedelta(days=6)
-            end_date = today
-        elif filter_date_range == "Últimos 30 días":
-            start_date = today - datetime.timedelta(days=29)
-            end_date = today
-        elif filter_date_range == "Esta semana":
-            start_date = today - datetime.timedelta(days=today.weekday())
-            end_date = start_date + datetime.timedelta(days=6)
-        elif filter_date_range == "Este mes":
-            start_date = today.replace(day=1)
-            next_month = (today.replace(day=28) + datetime.timedelta(days=4)).replace(day=1)
-            end_date = next_month - datetime.timedelta(days=1)
-        elif filter_date_range == "Mes anterior":
-            first_of_this_month = today.replace(day=1)
-            end_date = first_of_this_month - datetime.timedelta(days=1)
-            start_date = end_date.replace(day=1)
-        elif filter_date_range == "Este año":
-            start_date = today.replace(month=1, day=1)
-            end_date = today.replace(month=12, day=31)
-        elif filter_date_range == "Personalizado" and custom_start_date:
-            start_date = custom_start_date
-            end_date = custom_end_date or custom_start_date
-
+        start_date, end_date = get_date_range(filter_date_range, today, custom_start_date, custom_end_date)
         if start_date and end_date:
             filtered_df = filtered_df[(filtered_df['date'] >= start_date) & (filtered_df['date'] <= end_date)]
 
@@ -193,10 +198,7 @@ if has_pending_edits:
                     tx_id = int(orig_row['id'])
 
                     raw_date = changes.get('date', orig_row['date'])
-                    if isinstance(raw_date, (datetime.date, datetime.datetime)):
-                        d_str = raw_date.strftime("%Y-%m-%d")
-                    else:
-                        d_str = str(raw_date)
+                    d_str = parse_date(raw_date)
 
                     t_str = changes.get('type', orig_row['type'])
                     amt = float(changes.get('amount', orig_row['amount']))
@@ -214,6 +216,7 @@ if has_pending_edits:
                     desc = changes.get('description', orig_row['description'] or '')
                     status_val = changes.get('status', orig_row['status'])
                     rec_val = 1 if changes.get('is_recurring', orig_row['is_recurring']) else 0
+                    inst_val = int(changes.get('installments', orig_row.get('installments', 1)))
 
                     ok, msg = update_transaction(
                         transaction_id=tx_id,
@@ -226,7 +229,8 @@ if has_pending_edits:
                         category_id=cat_id,
                         description=desc,
                         status=status_val,
-                        is_recurring=rec_val
+                        is_recurring=rec_val,
+                        installments=inst_val
                     )
                     if not ok:
                         errors.append(f"Error al actualizar ID {tx_id}: {msg}")
@@ -239,10 +243,7 @@ if has_pending_edits:
                 
                 if a_amount > 0 and a_acc_id:
                     a_raw_date = row_data.get('date', datetime.date.today())
-                    if isinstance(a_raw_date, (datetime.date, datetime.datetime)):
-                        a_d_str = a_raw_date.strftime("%Y-%m-%d")
-                    else:
-                        a_d_str = str(a_raw_date)
+                    a_d_str = parse_date(a_raw_date)
 
                     a_type = row_data.get('type', 'Egreso')
                     a_curr = row_data.get('currency', 'CLP')
@@ -253,19 +254,40 @@ if has_pending_edits:
                     a_desc = row_data.get('description', '')
                     a_status = row_data.get('status', 'Completado')
                     a_rec = 1 if row_data.get('is_recurring') else 0
+                    a_installments = int(row_data.get('installments', 1))
+                    
+                    acc_type = None
+                    if a_acc_id:
+                        acc_match = accounts_df[accounts_df['id'] == a_acc_id]
+                        if not acc_match.empty:
+                            acc_type = acc_match['type'].values[0]
 
-                    ok, msg = add_transaction(
-                        date_str=a_d_str,
-                        type_str=a_type,
-                        amount=a_amount,
-                        currency=a_curr,
-                        account_id=a_acc_id,
-                        destination_account_id=a_dest_acc_id,
-                        category_id=a_cat_id,
-                        description=a_desc,
-                        status=a_status,
-                        is_recurring=a_rec
-                    )
+                    if acc_type == 'Tarjeta Crédito' and a_type == 'Egreso':
+                        ok, msg = process_credit_card_expense(
+                            account_id=a_acc_id,
+                            date_str=a_d_str,
+                            amount=a_amount,
+                            currency=a_curr,
+                            category_id=a_cat_id,
+                            description=a_desc,
+                            installments=a_installments,
+                            status=a_status,
+                            is_recurring=a_rec
+                        )
+                    else:
+                        ok, msg = add_transaction(
+                            date_str=a_d_str,
+                            type_str=a_type,
+                            amount=a_amount,
+                            currency=a_curr,
+                            account_id=a_acc_id,
+                            destination_account_id=a_dest_acc_id,
+                            category_id=a_cat_id,
+                            description=a_desc,
+                            status=a_status,
+                            is_recurring=a_rec,
+                            installments=a_installments
+                        )
                     if not ok:
                         errors.append(f"Error al añadir fila: {msg}")
 
@@ -282,7 +304,7 @@ if has_pending_edits:
 
 # Tabla interactiva con edición directa por celda
 st.data_editor(
-    filtered_df[['id', 'date', 'type', 'amount', 'currency', 'account_name', 'destination_account_name', 'category_name', 'description', 'status', 'is_recurring']],
+    filtered_df[['id', 'date', 'type', 'amount', 'currency', 'account_name', 'destination_account_name', 'category_name', 'description', 'status', 'is_recurring', 'installments']],
     column_config={
         'id': st.column_config.NumberColumn('ID', disabled=True, format="%d"),
         'date': st.column_config.DateColumn('Fecha', format="YYYY-MM-DD"),
@@ -294,7 +316,8 @@ st.data_editor(
         'category_name': st.column_config.SelectboxColumn('Categoría', options=list(category_name_to_id.keys())),
         'description': st.column_config.TextColumn('Descripción'),
         'status': st.column_config.SelectboxColumn('Estado', options=['Completado', 'Pendiente', 'Cancelado'], required=True),
-        'is_recurring': st.column_config.CheckboxColumn('Recurrente')
+        'is_recurring': st.column_config.CheckboxColumn('Recurrente'),
+        'installments': st.column_config.NumberColumn('Cuotas', min_value=1, default=1, format="%d", step=1)
     },
     hide_index=True,
     num_rows="dynamic",

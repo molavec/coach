@@ -15,7 +15,7 @@ coach/
 
 ## Project Management Rules
 
-* **Database Persistence:** All application data is stored and managed locally in the SQLite database `./coach.db`.
+* **Database Persistence:** All application data is stored in `./coach.db`. **IMPORTANT:** The agent MUST ALWAYS use `python scripts/agent_db.py` (e.g. `--action add_transaction`, `--action query --sql="..."`) to interact with the database. Never use raw `sqlite3` from the terminal.
 * **Active Projects:** Manage in `projects` table (`WHERE status = 'Activo'`).
 * **Active Tasks:** Manage in `tasks` and `task_tags` tables (`WHERE status != 'Completado' AND status != 'Archivado'`).
 * **Archived Records:** Mark records with `status = 'Archivado'` and set `archived_at = CURRENT_TIMESTAMP`.
@@ -23,5 +23,5 @@ coach/
 * **Personal Finances & Accounts:** Manage in `accounts`, `categories`, `transactions`, `pending_payments`, `savings_goals`, and `budgets` tables.
 * **Focus Areas:** Update in `growth_focus_areas` table.
 * **Checklists:** Create and manage in `growth_checklists` table.
-* **Retrospectives & Journaling:** Store in `growth_reflections` table and save a markdown copy in `./growth/reflections/YYYY-MM-DD-retrospective.md`.
+* **Retrospectives & Journaling (Hybrid Model):** Store a highly condensed summary (insights, alerts) in the `growth_reflections` table via `agent_db.py` AND save the full narrative markdown copy in `./growth/reflections/YYYY-MM-DD-retrospective.md`.
 * **Coach Institutional Notes:** Store in `coach_notes` table (with `area` as 'profile', 'projects', 'finances', or 'growth').

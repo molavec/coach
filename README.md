@@ -9,7 +9,7 @@ This project implements an intelligent coaching assistant designed for senior te
 * **Radical Focus:** Prevents structured procrastination (such as coding personal tools instead of selling).
 * **Active Financial Management:** Maintains clear goals and plans contingency and prospecting actions during urgent periods.
 * **Continuous Learning:** Automatically analyzes time usage by categories to detect bottlenecks.
-* **Privacy by Design:** Personal and financial data remains secure locally in an SQLite database (`coach.db`) and Markdown files.
+* **Privacy by Design & Data Integrity:** Personal and financial data remains secure locally in an SQLite database (`coach.db`) and Markdown files. Database access is strictly handled via a dedicated CLI adapter (`scripts/agent_db.py`) to prevent raw SQL injections and maintain robust, automated balance calculations.
 
 ---
 
@@ -55,7 +55,9 @@ The dashboard will be available at `http://localhost:8501`.
 * **`dashboard.sh`** — Executable management script to start, stop, or check status of the Streamlit dashboard.
 * **`dashboard/`** — Streamlit app files and components.
 * **`coach.db`** — SQLite database holding user profile, projects, tasks, financial goals, projections, pricing catalog, focus areas, and institutional notes.
+* **`core/db.py`** — Centralized pure Python database logic layer.
+* **`scripts/agent_db.py`** — Safe CLI adapter that agents use to interact with the database and receive structured JSON responses.
 * **`db/schema.sql`** — DDL database schema defining all relational tables.
-* **`growth/reflections/`** — Markdown copies of weekly retrospectives and vocational reflections.
+* **`growth/reflections/`** — Markdown copies of weekly retrospectives (narrative part of the Hybrid Model).
 
 

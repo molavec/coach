@@ -14,8 +14,8 @@ description: Financial, Vocational Coach & Productivity Strategist
 
 At the beginning of each session, the agent must check if user configuration exists in SQLite database `coach.db`:
 
-```sql
-SELECT COUNT(*) FROM user_profile;
+```bash
+python scripts/agent_db.py --action query --sql "SELECT COUNT(*) FROM user_profile;"
 ```
 
 * **If count is 0 or table does not exist** → The user is new. Activate the `coach-init` skill to perform the minimum onboarding (3 essential questions).
@@ -53,14 +53,8 @@ In addition to `estimated_time` and `created_at`, the `tasks` table includes:
 * **`actual_time`** — Actual time spent. If `started_at` and `completed_at` exist, the coach can calculate it automatically.
 
 Task SQL structure:
-```sql
-SELECT t.id, t.title, t.project_id, t.estimated_time, t.actual_time, 
-       t.started_at, t.completed_at, t.assignee, t.priority, t.status,
-       GROUP_CONCAT(tg.tag, ', ') AS tags
-FROM tasks t
-LEFT JOIN task_tags tg ON t.id = tg.task_id
-WHERE t.id = ?
-GROUP BY t.id;
+```bash
+python scripts/agent_db.py --action query --sql "SELECT t.id, t.title, t.project_id, t.estimated_time, t.actual_time, t.started_at, t.completed_at, t.assignee, t.priority, t.status, GROUP_CONCAT(tg.tag, ', ') AS tags FROM tasks t LEFT JOIN task_tags tg ON t.id = tg.task_id WHERE t.id = <TASK_ID> GROUP BY t.id;"
 ```
 
 ### B. Financial Planning (`financial_goals`, `financial_projections`, `financial_pricing`)
@@ -74,7 +68,7 @@ GROUP BY t.id;
 * Work checklists and project SOPs.
 * Space for vocational reflections and weekly retrospectives.
 * Database tables: `growth_focus_areas`, `growth_checklists`, `growth_reflections`.
-* **Markdown Backup:** Weekly retrospectives are stored in `growth_reflections` table AND exported to `./growth/reflections/YYYY-MM-DD-retrospective.md`.
+* **Markdown Backup (Hybrid Model):** Weekly retrospectives are stored as a highly condensed summary in the `growth_reflections` table AND the full narrative is exported to `./growth/reflections/YYYY-MM-DD-retrospective.md`.
 
 ### D. Coach Notes (`coach_notes`)
 The `coach_notes` table acts as the **coach's institutional memory** across management areas:
@@ -87,7 +81,8 @@ The `coach_notes` table acts as the **coach's institutional memory** across mana
 | `'growth'` | Coach reflections on user development: focus areas that generated results, areas of resistance, strategic ideas for success. |
 
 **Rules of Use:**
-* The coach **updates these records at the end of each weekly checkpoint** (`coach-checkpoint` skill) with relevant learnings.
+* **IMPORTANT DB RULE:** ALWAYS use `python scripts/agent_db.py` for database access. For supported actions, use `--action <action>` (e.g., `--action load_projects_and_tasks`). For custom queries, use `--action query --sql "..."` or `--action execute --sql "..."`. NEVER use raw `sqlite3` from the terminal.
+* The coach **updates these records at the end of each weekly checkpoint** (`coach-checkpoint` skill) with relevant learnings using `--action execute --sql "INSERT INTO coach_notes..."`.
 * The coach **queries `coach_notes` at the beginning of each session** along with user configuration.
 * Each entry includes `date`, `area`, and `content`.
 * These notes maintain context between sessions and offer increasingly precise recommendations.
@@ -133,7 +128,7 @@ The coach **must NOT ask for all information at once**. Instead, complete user c
 | `financial_projections` | Discussing financial planning for a period. Save projection for the mentioned month. |
 | `growth_focus_areas` | 2-3 clear focus areas are identified. Propose areas and insert validated ones into DB. |
 | `growth_checklists` | The user needs to document SOPs for a project. |
-| `growth_reflections` | Vocational reflections or weekly retrospectives arise. Insert into DB and export markdown copy to `./growth/reflections/`. |
+| `growth_reflections` | Vocational reflections or weekly retrospectives arise. Save a condensed summary to DB via `agent_db.py` and export the full narrative markdown to `./growth/reflections/`. |
 
 ### Discovery Rules
 

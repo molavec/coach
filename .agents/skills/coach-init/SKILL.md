@@ -11,7 +11,7 @@ This skill handles the **first contact** with a new user. The goal is to create 
 
 ## When to Activate
 
-Activate this flow **ONLY** when `SELECT COUNT(*) FROM user_profile;` in `coach.db` returns `0` (or database is not initialized).
+Activate this flow **ONLY** when `python scripts/agent_db.py --action query --sql "SELECT COUNT(*) FROM user_profile;"` returns `0` (or database is not initialized).
 
 ---
 
@@ -23,9 +23,8 @@ Activate this flow **ONLY** when `SELECT COUNT(*) FROM user_profile;` in `coach.
 > (E.g., 'I'm Ana, a frontend developer and UX designer')"
 
 Based on the response, insert into `user_profile` table:
-```sql
-INSERT INTO user_profile (name, core_skills) 
-VALUES ('Name', 'Inferred core skills');
+```bash
+python scripts/agent_db.py --action execute --sql "INSERT INTO user_profile (name, core_skills) VALUES ('Name', 'Inferred core skills');"
 ```
 
 ### Question 2: Financial Goal
@@ -34,9 +33,8 @@ VALUES ('Name', 'Inferred core skills');
 > (E.g., '$2,000,000 CLP', '3,000 USD', '2,500 EUR')"
 
 Based on the response, insert into `financial_goals` table:
-```sql
-INSERT INTO financial_goals (period, monthly_amount, currency) 
-VALUES (strftime('%Y-%m', 'now'), 2000000, 'CLP');
+```bash
+python scripts/agent_db.py --action execute --sql "INSERT INTO financial_goals (period, monthly_amount, currency) VALUES (strftime('%Y-%m', 'now'), 2000000, 'CLP');"
 ```
 
 ### Question 3: Current Situation
@@ -46,13 +44,12 @@ VALUES (strftime('%Y-%m', 'now'), 2000000, 'CLP');
 
 Based on the response:
 - If they have projects → insert into `projects` table with the mentioned ones:
-  ```sql
-  INSERT INTO projects (id, name, status) VALUES ('proj_slug', 'Project Name', 'Activo');
+  ```bash
+  python scripts/agent_db.py --action execute --sql "INSERT INTO projects (id, name, status) VALUES ('proj_slug', 'Project Name', 'Activo');"
   ```
 - If they start from scratch → mark in `financial_goals` table:
-  ```sql
-  UPDATE financial_goals SET notes = 'User without active clients — prioritize prospecting' 
-  WHERE period = strftime('%Y-%m', 'now');
+  ```bash
+  python scripts/agent_db.py --action execute --sql "UPDATE financial_goals SET notes = 'User without active clients — prioritize prospecting' WHERE period = strftime('%Y-%m', 'now');"
   ```
 
 ---
@@ -94,4 +91,4 @@ These tables are populated later, when requirements arise organically in convers
 | `financial_projections` | When discussing monthly financial planning |
 | `growth_focus_areas` | When focus patterns are identified in conversations |
 | `growth_checklists` | When the user needs to document SOPs for a project |
-| `growth_reflections` | When vocational reflections or personal retrospectives occur (also exports markdown to `./growth/reflections/`) |
+| `growth_reflections` | When vocational reflections or personal retrospectives occur. Save a condensed summary to DB via `agent_db.py` and export the full narrative markdown to `./growth/reflections/` |

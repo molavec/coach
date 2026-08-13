@@ -137,7 +137,9 @@ Before generating any report, the agent must query SQLite database `coach.db`:
 - If the monthly financial gap is critical → the recommendation must be prospecting or sales closure, not internal development.
 - If the user completed > 80% → celebrate genuinely and raise the level of ambition for the next week.
 - If the user completed < 40% → do not judge, identify the root cause (excessive scope? external blockers? lack of energy?) and propose adjustments.
-- **Persistence:** Save the retrospective entry in `growth_reflections` table AND export a markdown copy in `growth/reflections/YYYY-MM-DD-retrospective.md`.
+- **Persistence (Hybrid Model):**
+  1. **Database:** Save a **highly condensed summary** (core insights, commitments, and alerts ONLY) into the `growth_reflections` table using `python scripts/agent_db.py --action execute --sql "INSERT INTO growth_reflections..."`. This keeps the database lightweight for quick queries.
+  2. **Markdown Backup:** Write the **full, extensive, narrative retrospective** (including all nuances, feelings, and detailed explanations) into a markdown file at `growth/reflections/YYYY-MM-DD-retrospective.md`.
 - Close with: **"Anything you want to add before planning next week?"**
 
 ---

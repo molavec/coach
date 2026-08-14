@@ -1,32 +1,5 @@
-import sqlite3
 import pandas as pd
-import os
-
-DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '../coach.db'))
-
-def init_db():
-    """Initialize the database schema if it hasn't been created yet."""
-    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-    cursor = conn.cursor()
-    # Check if a fundamental table like 'accounts' exists
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='accounts'")
-    if not cursor.fetchone():
-        schema_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../db/schema.sql'))
-        if os.path.exists(schema_path):
-            with open(schema_path, 'r', encoding='utf-8') as f:
-                schema_script = f.read()
-            cursor.executescript(schema_script)
-            conn.commit()
-    conn.close()
-
-# Initialize DB when module loads
-init_db()
-
-def get_connection():
-    """Establish connection to SQLite coach.db."""
-    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-    conn.row_factory = sqlite3.Row
-    return conn
+from core.repositories.base_repo import get_connection
 
 def load_accounts():
     """Load active financial accounts and their current balances."""
@@ -96,6 +69,23 @@ def load_categories():
     conn.close()
     return df
 
+def add_category(name, type_str, parent_id=None, is_essential=0):
+    """Insert a new financial category."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            INSERT INTO categories (name, type, parent_id, is_essential)
+            VALUES (?, ?, ?, ?)
+        ''', (name, type_str, parent_id, int(is_essential)))
+        conn.commit()
+        return True, "Categoría añadida exitosamente."
+    except Exception as e:
+        conn.rollback()
+        return False, str(e)
+    finally:
+        conn.close()
+
 def load_transactions(limit=500):
     """Load transactions joined with account and category names."""
     conn = get_connection()
@@ -124,112 +114,6 @@ def load_transactions(limit=500):
     df = pd.read_sql_query(query, conn)
     conn.close()
     return df
-
-def load_pending_payments():
-    """Load pending payments and receivables."""
-    conn = get_connection()
-    query = """
-        SELECT 
-            p.id, 
-            p.title, 
-            p.type, 
-            p.amount, 
-            p.currency, 
-            p.due_date, 
-            p.status, 
-            p.counterparty, 
-            p.paid_date,
-            p.notes,
-            a.name AS account_name,
-            c.name AS category_name
-        FROM pending_payments p
-        LEFT JOIN accounts a ON p.account_id = a.id
-        LEFT JOIN categories c ON p.category_id = c.id
-        ORDER BY p.due_date ASC;
-    """
-    df = pd.read_sql_query(query, conn)
-    conn.close()
-    return df
-
-def load_savings_goals():
-    """Load savings goals and targets."""
-    conn = get_connection()
-    query = """
-        SELECT 
-            s.id, 
-            s.name, 
-            s.target_amount, 
-            s.current_amount, 
-            s.currency, 
-            s.target_date, 
-            s.status,
-            a.name AS account_name
-        FROM savings_goals s
-        LEFT JOIN accounts a ON s.account_id = a.id
-        ORDER BY s.id ASC;
-    """
-    df = pd.read_sql_query(query, conn)
-    conn.close()
-    return df
-
-def load_budgets_vs_actual(period=None):
-    """Compare monthly allocated budget vs actual expenses per category."""
-    conn = get_connection()
-    where_clause = f"WHERE b.period = '{period}'" if period else ""
-    query = f"""
-        SELECT 
-            b.id,
-            b.period,
-            c.name AS category_name,
-            c.is_essential,
-            b.allocated_amount,
-            b.currency,
-            COALESCE(SUM(t.amount), 0) AS actual_amount
-        FROM budgets b
-        JOIN categories c ON b.category_id = c.id
-        LEFT JOIN transactions t ON t.category_id = c.id 
-            AND strftime('%Y-%m', t.date) = b.period
-            AND t.type = 'Egreso'
-        {where_clause}
-        GROUP BY b.id, b.period, c.name, c.is_essential, b.allocated_amount, b.currency;
-    """
-    df = pd.read_sql_query(query, conn)
-    conn.close()
-    return df
-
-def load_cash_flow_monthly():
-    """Calculate monthly cash flow totals (Ingresos vs Egresos)."""
-    conn = get_connection()
-    query = """
-        SELECT 
-            strftime('%Y-%m', date) AS month,
-            SUM(CASE WHEN type = 'Ingreso' THEN amount ELSE 0 END) AS total_income,
-            SUM(CASE WHEN type = 'Egreso' THEN amount ELSE 0 END) AS total_expenses,
-            SUM(CASE WHEN type = 'Ingreso' THEN amount ELSE -amount END) AS net_flow
-        FROM transactions
-        WHERE type IN ('Ingreso', 'Egreso')
-        GROUP BY strftime('%Y-%m', date)
-        ORDER BY month ASC;
-    """
-    df = pd.read_sql_query(query, conn)
-    conn.close()
-    return df
-
-def load_projects_and_tasks():
-    """Load tasks and projects productivity data."""
-    conn = get_connection()
-    projects_df = pd.read_sql_query("SELECT * FROM projects", conn)
-    tasks_df = pd.read_sql_query("""
-        SELECT 
-            t.id, t.title, t.project_id, p.name AS project_name, 
-            t.estimated_time, t.actual_time, t.priority, t.status, 
-            t.created_at, t.started_at, t.completed_at
-        FROM tasks t
-        LEFT JOIN projects p ON t.project_id = p.id
-        ORDER BY t.created_at DESC;
-    """, conn)
-    conn.close()
-    return projects_df, tasks_df
 
 def add_transaction(date_str, type_str, amount, currency, account_id, destination_account_id, category_id, description, status='Completado', is_recurring=0, installments=1):
     """Insert a new transaction and update relevant account balances."""
@@ -375,6 +259,32 @@ def update_transaction(transaction_id, date_str, type_str, amount, currency, acc
     finally:
         conn.close()
 
+def load_pending_payments():
+    """Load pending payments and receivables."""
+    conn = get_connection()
+    query = """
+        SELECT 
+            p.id, 
+            p.title, 
+            p.type, 
+            p.amount, 
+            p.currency, 
+            p.due_date, 
+            p.status, 
+            p.counterparty, 
+            p.paid_date,
+            p.notes,
+            a.name AS account_name,
+            c.name AS category_name
+        FROM pending_payments p
+        LEFT JOIN accounts a ON p.account_id = a.id
+        LEFT JOIN categories c ON p.category_id = c.id
+        ORDER BY p.due_date ASC;
+    """
+    df = pd.read_sql_query(query, conn)
+    conn.close()
+    return df
+
 def add_pending_payment(title, type_str, amount, currency, due_date, account_id, category_id, status='Pendiente', counterparty=None, notes=None):
     """Insert a new pending payment."""
     conn = get_connection()
@@ -391,6 +301,31 @@ def add_pending_payment(title, type_str, amount, currency, due_date, account_id,
         return False, str(e)
     finally:
         conn.close()
+
+def load_budgets_vs_actual(period=None):
+    """Compare monthly allocated budget vs actual expenses per category."""
+    conn = get_connection()
+    where_clause = f"WHERE b.period = '{period}'" if period else ""
+    query = f"""
+        SELECT 
+            b.id,
+            b.period,
+            c.name AS category_name,
+            c.is_essential,
+            b.allocated_amount,
+            b.currency,
+            COALESCE(SUM(t.amount), 0) AS actual_amount
+        FROM budgets b
+        JOIN categories c ON b.category_id = c.id
+        LEFT JOIN transactions t ON t.category_id = c.id 
+            AND strftime('%Y-%m', t.date) = b.period
+            AND t.type = 'Egreso'
+        {where_clause}
+        GROUP BY b.id, b.period, c.name, c.is_essential, b.allocated_amount, b.currency;
+    """
+    df = pd.read_sql_query(query, conn)
+    conn.close()
+    return df
 
 def add_budget(period, category_id, allocated_amount, currency='CLP'):
     """Insert a new budget for a specific category and period."""
@@ -409,60 +344,20 @@ def add_budget(period, category_id, allocated_amount, currency='CLP'):
     finally:
         conn.close()
 
-def add_category(name, type_str, parent_id=None, is_essential=0):
-    """Insert a new financial category."""
+def load_cash_flow_monthly():
+    """Calculate monthly cash flow totals (Ingresos vs Egresos)."""
     conn = get_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute('''
-            INSERT INTO categories (name, type, parent_id, is_essential)
-            VALUES (?, ?, ?, ?)
-        ''', (name, type_str, parent_id, int(is_essential)))
-        conn.commit()
-        return True, "Categoría añadida exitosamente."
-    except Exception as e:
-        conn.rollback()
-        return False, str(e)
-    finally:
-        conn.close()
-
-def add_savings_goal(name, target_amount, current_amount=0.0, currency='CLP', target_date=None, account_id=None, status='En Progreso'):
-    """Insert a new savings goal."""
-    conn = get_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute('''
-            INSERT INTO savings_goals (name, target_amount, current_amount, currency, target_date, account_id, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (name, float(target_amount), float(current_amount), currency, target_date, account_id, status))
-        conn.commit()
-        return True, "Meta de ahorro añadida exitosamente."
-    except Exception as e:
-        conn.rollback()
-        return False, str(e)
-    finally:
-        conn.close()
-
-def execute_read_query(sql_string):
-    """Execute a raw SELECT query and return a DataFrame."""
-    conn = get_connection()
-    try:
-        df = pd.read_sql_query(sql_string, conn)
-        return df
-    finally:
-        conn.close()
-
-def execute_write_query(sql_string):
-    """Execute a raw INSERT, UPDATE, or DELETE query."""
-    conn = get_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.executescript(sql_string)
-        conn.commit()
-        return True, "Consulta ejecutada exitosamente."
-    except Exception as e:
-        conn.rollback()
-        return False, str(e)
-    finally:
-        conn.close()
-
+    query = """
+        SELECT 
+            strftime('%Y-%m', date) AS month,
+            SUM(CASE WHEN type = 'Ingreso' THEN amount ELSE 0 END) AS total_income,
+            SUM(CASE WHEN type = 'Egreso' THEN amount ELSE 0 END) AS total_expenses,
+            SUM(CASE WHEN type = 'Ingreso' THEN amount ELSE -amount END) AS net_flow
+        FROM transactions
+        WHERE type IN ('Ingreso', 'Egreso')
+        GROUP BY strftime('%Y-%m', date)
+        ORDER BY month ASC;
+    """
+    df = pd.read_sql_query(query, conn)
+    conn.close()
+    return df

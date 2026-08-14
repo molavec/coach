@@ -1,6 +1,7 @@
 import streamlit as st
 from datetime import datetime
-from utils.db import load_accounts, load_savings_goals, add_account, add_savings_goal
+from services.finance_cache import load_accounts, add_account
+from services.goals_cache import load_savings_goals, add_savings_goal
 from components.charts import plot_account_balances
 from components.tables import render_savings_goals_table
 

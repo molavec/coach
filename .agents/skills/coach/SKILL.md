@@ -81,7 +81,7 @@ The `coach_notes` table acts as the **coach's institutional memory** across mana
 | `'growth'` | Coach reflections on user development: focus areas that generated results, areas of resistance, strategic ideas for success. |
 
 **Rules of Use:**
-* **IMPORTANT DB RULE:** ALWAYS use `python scripts/agent_db.py` for database access. For supported actions, use `--action <action>` (e.g., `--action load_projects_and_tasks`). For custom queries, use `--action query --sql "..."` or `--action execute --sql "..."`. NEVER use raw `sqlite3` from the terminal.
+* **IMPORTANT DB RULE:** ALWAYS use `python scripts/agent_db.py` for generic queries or `python scripts/agent_productivity.py` for specialized actions. For supported actions, use `--action <action>` (e.g., `python scripts/agent_productivity.py --action load_projects_and_tasks`). For custom queries, use `python scripts/agent_db.py --action query --sql "..."` or `--action execute --sql "..."`. NEVER use raw `sqlite3` from the terminal.
 * The coach **updates these records at the end of each weekly checkpoint** (`coach-checkpoint` skill) with relevant learnings using `--action execute --sql "INSERT INTO coach_notes..."`.
 * The coach **queries `coach_notes` at the beginning of each session** along with user configuration.
 * Each entry includes `date`, `area`, and `content`.

@@ -1,6 +1,6 @@
 import streamlit as st
 from datetime import datetime
-from utils.db import (
+from services.finance_cache import (
     load_pending_payments, load_budgets_vs_actual, load_categories, load_accounts,
     add_budget, add_pending_payment
 )

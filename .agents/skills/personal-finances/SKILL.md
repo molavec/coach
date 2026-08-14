@@ -9,7 +9,7 @@ description: Personal financial advisor and account manager for tracking income,
 * **Core Goal:** Guarantee financial peace of mind, full cash flow visibility, active debt/receivables radar, and protection of emergency funds and savings goals.
 * **Default Currency:** **CLP (Pesos Chilenos)** as default currency, with full support for multi-currency transactions (`USD`, `EUR`, etc.).
 * **Zero-Friction Tracking:** Allow fast recording of transactions via natural language, automatic category matching, and immediate balance reconciliation.
-* **IMPORTANT DB RULE:** ALWAYS use `python scripts/agent_db.py` for database operations. For transactions, use `--action add_transaction`. For reading, use specific actions like `--action load_accounts`. For unsupported operations, use `--action query --sql "..."` or `--action execute --sql "..."`.
+* **IMPORTANT DB RULE:** ALWAYS use `python scripts/agent_finance.py` for database operations. For transactions, use `--action add_transaction`. For reading, use specific actions like `--action load_accounts`. For unsupported operations, use `python scripts/agent_db.py --action query --sql "..."` or `--action execute --sql "..."`.
 
 ---
 
@@ -132,12 +132,12 @@ CREATE TABLE IF NOT EXISTS budgets (
 
 ## 3. Account Balance Automation Protocol
 
-Whenever transactions are created, modified, or deleted using `scripts/agent_db.py --action add_transaction`, the balance updates (`accounts` table) are **handled automatically** by the python script. 
+Whenever transactions are created, modified, or deleted using `scripts/agent_finance.py --action add_transaction`, the balance updates (`accounts` table) are **handled automatically** by the python script. 
 You do NOT need to manually run `UPDATE accounts SET balance...` when using `add_transaction`, `update_transaction`, or `delete_transaction`.
 
 For `pending_payments` settlements:
 - Use `python scripts/agent_db.py --action execute --sql "UPDATE pending_payments SET status='Pagado'..."`
-- Then use `python scripts/agent_db.py --action add_transaction ...` to record the actual transaction and let the script handle the balance.
+- Then use `python scripts/agent_finance.py --action add_transaction ...` to record the actual transaction and let the script handle the balance.
 
 ---
 
@@ -147,11 +147,11 @@ The agent automatically triggers this skill when the user mentions financial ope
 
 | Action / Phrase | Trigger | AI Execution Protocol |
 |---|---|---|
-| *"Registrar gasto de 45.000 CLP en Almuerzo con Banco Santander"* | Registrar Egreso | 1. Resolve category & account IDs.<br>2. Use `python scripts/agent_db.py --action add_transaction` with type 'Egreso'. |
-| *"Registrar ingreso de 1.500 USD por proyecto de software"* | Registrar Ingreso | 1. Resolve account & category IDs.<br>2. Use `python scripts/agent_db.py --action add_transaction` with type 'Ingreso'. |
+| *"Registrar gasto de 45.000 CLP en Almuerzo con Banco Santander"* | Registrar Egreso | 1. Resolve category & account IDs.<br>2. Use `python scripts/agent_finance.py --action add_transaction` with type 'Egreso'. |
+| *"Registrar ingreso de 1.500 USD por proyecto de software"* | Registrar Ingreso | 1. Resolve account & category IDs.<br>2. Use `python scripts/agent_finance.py --action add_transaction` with type 'Ingreso'. |
 | *"Tengo un cobro pendiente de 800 USD para el 15 de agosto"* | Registrar Pago Pendiente | 1. Use `agent_db.py --action execute --sql` to insert into `pending_payments`. |
-| *"Pagué la cuota de la tarjeta de crédito de 120.000 CLP"* | Liquidar Pago Pendiente | 1. Update `pending_payments` via `--action execute`.<br>2. Use `--action add_transaction`. |
-| *"¿Cuáles son mis pagos pendientes de este mes?"* | Consultar Pendientes | Run `python scripts/agent_db.py --action load_pending_payments` and display. |
+| *"Pagué la cuota de la tarjeta de crédito de 120.000 CLP"* | Liquidar Pago Pendiente | 1. Update `pending_payments` via `agent_db.py --action execute`.<br>2. Use `agent_finance.py --action add_transaction`. |
+| *"¿Cuáles son mis pagos pendientes de este mes?"* | Consultar Pendientes | Run `python scripts/agent_finance.py --action load_pending_payments` and display. |
 | *"Ver mi estado financiero"* / *"Reporte mensual"* | Generar Reporte Completo | Use `load_cash_flow_monthly`, `load_accounts`, and `load_budgets_vs_actual`. |
 
 ---

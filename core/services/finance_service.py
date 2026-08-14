@@ -1,7 +1,7 @@
 import sqlite3
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from core.db import get_connection
+from core.repositories.base_repo import get_connection
 
 def process_credit_card_expense(account_id, date_str, amount, currency, category_id, description, installments, status='Completado', is_recurring=0):
     """
@@ -89,5 +89,5 @@ def register_regular_transaction(date_str, type_str, amount, currency, account_i
     """
     Standard transaction wrapper moved to service layer for better encapsulation.
     """
-    from core.db import add_transaction
+    from core.repositories.finance_repo import add_transaction
     return add_transaction(date_str, type_str, amount, currency, account_id, destination_account_id, category_id, description, status, is_recurring)

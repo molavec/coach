@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.db import load_projects_and_tasks
+from services.projects_cache import load_projects_and_tasks
 from components.kpis import render_task_kpis
 from components.charts import plot_tasks_status
 
